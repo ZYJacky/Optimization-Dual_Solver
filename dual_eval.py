@@ -19,6 +19,7 @@ from scipy.optimize import Bounds
 
 import matplotlib.pyplot as plt
 
+# multiplier and dual values
 q = []
 m = []
 
@@ -31,22 +32,29 @@ def main():
     minimizer_kwargs = {"method": "SLSQP", "bounds" : bounds}
 
     # outer loop, edit the first argument to test different function
-    result_outer = basinhopping(outer_function_2, [-1], niter=100, minimizer_kwargs=minimizer_kwargs) 
+    result_outer = basinhopping(example_function_5, [-1], niter=100, minimizer_kwargs=minimizer_kwargs) 
 
     # display result
     print(result_outer.x[0])
     print(-result_outer.fun)
     print(result_outer.nit)
 
-    plt.plot(m, q)
+    # plotting
+    figure = plt.figure()
+    ax = figure.add_subplot()
+    ax.autoscale()
+    ax.plot(m, q)
     plt.show()
+
 
 '''
     min x1 + x2
-    s.t. (x1 * x2) - 1 = 0
-    x1 >= 0, x2 >= 0
+
+    s.t. g(x) = (x1 * x2) - 1 = 0
+
+    x in R, x1 >= 0, x2 >= 0
 '''
-def example_function(multiplier):
+def example_function_1(multiplier):
 
     bounds = Bounds([0, 0], [np.inf, np.inf])
 
@@ -62,15 +70,20 @@ def example_function(multiplier):
 
     return -(x_1 + x_2 + multiplier[0] * (x_1 * x_2 - 1))
 
-'''
-min x
 
-s.t. x^2 <=0
 '''
-def outer_function_4(mu):
+    min x
+
+    s.t. g(x) = x^2 <=0
+
+    x in R
+'''
+def example_function_2(mu):
     
+    #start inner loop
     inner_result = basinhopping(lambda x : x[0] + mu[0]*x[0]**2, [0])
 
+    # set x value from inner loop
     x_1 = inner_result.x[0]
 
     m.append(mu[0])
@@ -79,10 +92,16 @@ def outer_function_4(mu):
     return -(x_1 + mu[0]*x_1**2)
 
 
-def outer_function_3(mu):
+'''
+    min |x1| + x2
+
+    s.t. g(x) = x1 <=0
+
+    x in R, x2 >= 0
+'''
+def example_function_3(mu):
 
     bounds = Bounds([-np.inf, 0], [np.inf, np.inf])
-    
     minimizer_kwargs = {"method": "SLSQP", "bounds" : bounds}
     inner_result = basinhopping(lambda x : abs(x[0]) + x[1] + mu[0]*(x[0]), [0, 0], minimizer_kwargs=minimizer_kwargs)
 
@@ -95,12 +114,21 @@ def outer_function_3(mu):
     return -(abs(x_1) + x_2 + mu[0]*x_1)
 
 
-def outer_function_2(mu):
+'''
+    min x1 - x2
 
+    s.t. g(x) = x1 + x2 - 1 <=0
+
+    x in R, x1 >= 0, x2 >= 0
+'''
+def example_function_4(mu):
+
+    #define bounds and start inner loop
     bounds = Bounds([0, 0], [np.inf, np.inf])
     minimizer_kwargs = {"method": "SLSQP", "bounds" : bounds}
     inner_result = basinhopping(lambda x : x[0] - x[1] + mu[0]*(x[0] + x[1] - 1), [0, 0], minimizer_kwargs=minimizer_kwargs)
 
+    # set x value from inner loop
     x_1 = inner_result.x[0]
     x_2 = inner_result.x[1]
 
@@ -110,7 +138,14 @@ def outer_function_2(mu):
     return -(x_1 - x_2 + mu[0]*(x_1 + x_2 - 1))
    
 
-def outer_function(mu):
+'''
+    min 1/2(x1^* - x2*2)
+
+    s.t. g(x) = x1 - 1 <=0
+
+    x in R
+'''
+def example_function_5(mu):
 
     inner_result = basinhopping(lambda x : 1/2 * (x[0]**2 + x[1]**2) + mu[0]*(x[0] - 1), [0, 0])
     x_1 = inner_result.x[0]
